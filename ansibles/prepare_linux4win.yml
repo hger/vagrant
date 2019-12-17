@@ -1,0 +1,47 @@
+---
+- hosts:  all
+  become: yes
+  vars:
+    - ansible_python_interpreter: /usr/libexec/platform-python
+  tasks:
+
+    - name: get defaults
+      include_vars:
+        file: defaults/main.yml
+
+    - name: Subscribe to Red Hat
+      redhat_subscription:
+        state: present
+        username: "{{ subs_username }}"
+        password: "{{ subs_pw }}"
+        autosubscribe: false
+        pool: "{{ subs_pool }}"
+
+    - name: Enable required repositories
+      rhsm_repository:
+        name: "{{ enabled_repos_rhel8 }}"
+        state: enabled
+
+    - name: Upgrade all packages
+      yum:
+        name: '*'
+        state: latest
+
+    - name: Install cockpit
+      yum:
+        name:
+          - cockpit
+          - cockpit-composer
+        state: latest
+
+    - name: Enable the cockpit service
+      systemd:
+        name: cockpit.socket
+        state: started
+        enabled: yes
+
+    - name: Open the firewall for cockpit
+      firewalld:
+        service: cockpit
+        permanent: yes
+        state: enabled
