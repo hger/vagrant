@@ -1,13 +1,17 @@
 ---
-- hosts:  all
+- name: Prepare and configure the base
+  hosts:  all
   become: yes
   vars:
     - ansible_python_interpreter: /usr/libexec/platform-python
   tasks:
-
     - name: get defaults
       include_vars:
         file: defaults/main.yml
+
+    - name: Set hostname
+      hostname:
+        name: linux4win
 
     - name: Subscribe to Red Hat
       redhat_subscription:
@@ -22,10 +26,10 @@
         name: "{{ enabled_repos_rhel8 }}"
         state: enabled
 
-    - name: Upgrade all packages
-      yum:
-        name: '*'
-        state: latest
+#    - name: Upgrade all packages
+#      yum:
+#        name: '*'
+#        state: latest
 
     - name: Install cockpit
       yum:
@@ -45,3 +49,12 @@
         service: cockpit
         permanent: yes
         state: enabled
+
+- name: Install all needed parts for the workshop
+  hosts:  all
+  become: yes
+  vars:
+    - ansible_python_interpreter: /usr/libexec/platform-python
+  tasks:
+  - name: Install apache using role
+    include_tasks: tasks/lab1.yml
